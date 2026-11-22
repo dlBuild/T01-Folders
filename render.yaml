@@ -1,0 +1,63 @@
+# Render Blueprint: one web service that serves the API AND the built website (same origin => secure cookies just work).
+# Database = MongoDB Atlas (create it separately and paste its connection string as MONGO_URI).
+services:
+  - type: web
+    name: t01
+    runtime: node
+    region: singapore            # closest Render region to India - change if you prefer
+    plan: starter                # always-on. Do NOT use "free" for a payment site (it sleeps and drops webhooks)
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: t01-data
+      mountPath: /var/data       # thumbnails (and any uploaded product files) survive redeploys
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: JWT_SECRET
+        generateValue: true      # long random secret created by Render
+      - key: PAYMENT_MODE
+        value: cashfree
+      - key: CASHFREE_ENV
+        value: sandbox           # change to production only after Cashfree activates your account + whitelists your domain
+      - key: CASHFREE_APP_ID
+        sync: false              # paste in the Render dashboard (never commit)
+      - key: CASHFREE_SECRET_KEY
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: CLIENT_URL
+        sync: false              # e.g. https://t01.in  (your final https domain, no trailing slash)
+      - key: SERVER_PUBLIC_URL
+        sync: false              # same value as CLIENT_URL (one app serves both)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: T01 Admin
+      - key: ADMIN_PHONE
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: "T01 <no-reply@your-domain.com>"
+      # Optional, baked into the website at build time (policy pages):
+      - key: VITE_SUPPORT_EMAIL
+        sync: false
+      - key: VITE_SUPPORT_PHONE
+        sync: false
+      - key: VITE_BUSINESS_ADDRESS
+        sync: false
